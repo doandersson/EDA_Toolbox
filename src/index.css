@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 9.5pt;
+  }
+
+  /* Hide app navigation and sidebar during print */
+  nav,
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure strict A4 width constraints */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}

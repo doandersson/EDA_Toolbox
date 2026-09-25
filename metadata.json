@@ -1,0 +1,6 @@
+{
+  "name": "EDA Toolbox",
+  "description": "Professionell verktygslåda för elteknik, automation och dimensionering – beräkningar, IEC 81346, IEC 61355 samt AMA & BSAB koder.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

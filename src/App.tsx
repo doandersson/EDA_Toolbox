@@ -12,6 +12,7 @@ import { UnitConverter } from './components/Converter/UnitConverter';
 import { ElectricalReference, RefSubTab } from './components/Reference/ElectricalReference';
 import { HistoryModal } from './components/HistoryModal';
 import { BuildInfoModal } from './components/BuildInfoModal';
+import { AboutModal } from './components/AboutModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Wifi } from 'lucide-react';
 
@@ -24,6 +25,7 @@ export default function App() {
   const [history, setHistory] = useState<(CalculationResult & { label?: string })[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isBuildInfoOpen, setIsBuildInfoOpen] = useState<boolean>(false);
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
 
   // Load history from localStorage
   useEffect(() => {
@@ -95,6 +97,7 @@ export default function App() {
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         referenceSubTab={referenceSubTab}
         onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
+        onOpenAbout={() => setIsAboutOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -108,6 +111,7 @@ export default function App() {
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
           referenceSubTab={referenceSubTab}
           onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
+          onOpenAbout={() => setIsAboutOpen(true)}
         />
 
         {/* Dynamic Route Content */}
@@ -118,6 +122,7 @@ export default function App() {
               history={history}
               onOpenHistory={() => setIsHistoryOpen(true)}
               onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
+              onOpenAbout={() => setIsAboutOpen(true)}
             />
           )}
           {activeTab === 'ohms' && (
@@ -141,12 +146,47 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-auto border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p>© {new Date().getFullYear()} EDA Toolbox – Professionell elteknik, dimensionering och standarder.</p>
-            <p className="text-[11px] text-slate-600">
-              Följer svensk standard SS 436 40 00, SS-EN IEC 81346 &amp; SS-EN 61355.
-            </p>
+        <footer className="mt-auto border-t border-slate-900 py-6 text-xs text-slate-500 bg-slate-950/40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
+              <span className="text-slate-400 font-medium">
+                © {new Date().getFullYear()} EDA Toolbox PRO.
+              </span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span className="text-[11px] text-slate-500">
+                Svensk standard SS 436 40 00, SS-EN IEC 81346 &amp; SS-EN 61355.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center text-xs">
+              <button
+                onClick={() => setIsAboutOpen(true)}
+                className="text-slate-400 hover:text-amber-400 transition cursor-pointer font-medium"
+              >
+                Om appen
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => setIsAboutOpen(true)}
+                className="text-slate-400 hover:text-cyan-400 transition cursor-pointer font-medium"
+              >
+                Copyright &amp; Normer
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => setIsAboutOpen(true)}
+                className="text-slate-400 hover:text-emerald-400 transition cursor-pointer font-medium"
+              >
+                Kontakt &amp; Support
+              </button>
+              <span className="text-slate-700">•</span>
+              <button
+                onClick={() => setIsBuildInfoOpen(true)}
+                className="text-slate-400 hover:text-white transition cursor-pointer font-mono text-[11px]"
+              >
+                Bygginfo (CLI)
+              </button>
+            </div>
           </div>
         </footer>
       </div>
@@ -167,6 +207,12 @@ export default function App() {
       <BuildInfoModal
         isOpen={isBuildInfoOpen}
         onClose={() => setIsBuildInfoOpen(false)}
+      />
+
+      {/* About App & Copyright & Contact Modal */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
       />
     </div>
   );

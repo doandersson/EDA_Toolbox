@@ -164,6 +164,44 @@ export const BuildInfoModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 {copyButton('node -v && npm -v', 'sys-req', 'Kopiera test')}
               </div>
 
+              {/* Ready-to-run 1-click scripts for computer */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-950 to-cyan-500/10 border border-amber-500/30 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Laptop className="w-4 h-4 text-amber-400" />
+                    <span className="font-bold text-white text-xs sm:text-sm">
+                      Färdiga installationsskript för dator
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                    1-KLICK
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Projektet innehåller färdiga skript som automatiskt installerar och startar applikationen lokalt:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-amber-300">Windows:</strong>
+                      {copyButton('.\\install.bat', 'win-bat-copy')}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Kör <code className="text-white font-mono">install.bat</code> (eller <code className="text-white font-mono">run.bat</code> för direktstart).
+                    </p>
+                  </div>
+                  <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-cyan-300">macOS / Linux:</strong>
+                      {copyButton('./install.sh', 'unix-sh-copy')}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Kör <code className="text-white font-mono">./install.sh</code> (eller <code className="text-white font-mono">./run.sh</code>).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Step 1: Install */}
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/90 space-y-2">
                 <div className="flex items-center justify-between">

@@ -20,6 +20,7 @@ import {
   X,
   Sparkles,
   Terminal,
+  Info,
 } from 'lucide-react';
 
 interface Props {
@@ -31,6 +32,7 @@ interface Props {
   onCloseMobile: () => void;
   referenceSubTab?: string;
   onOpenBuildInfo?: () => void;
+  onOpenAbout?: () => void;
 }
 
 export const Sidebar: React.FC<Props> = ({
@@ -42,6 +44,7 @@ export const Sidebar: React.FC<Props> = ({
   onCloseMobile,
   referenceSubTab,
   onOpenBuildInfo,
+  onOpenAbout,
 }) => {
   const handleNavClick = (tab: ActiveTab, subTab?: string) => {
     onSelectTab(tab, subTab);
@@ -284,6 +287,22 @@ export const Sidebar: React.FC<Props> = ({
                 <span>Bygg &amp; Installation</span>
               </div>
               <span className="text-[10px] text-slate-500 font-mono">CLI / PWA</span>
+            </button>
+          )}
+
+          {onOpenAbout && (
+            <button
+              onClick={() => {
+                onOpenAbout();
+                onCloseMobile();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-amber-400 group-hover:text-amber-300" />
+                <span>Om applikationen</span>
+              </div>
+              <span className="text-[10px] text-amber-400/80 font-mono">Info &amp; Kontakt</span>
             </button>
           )}
 

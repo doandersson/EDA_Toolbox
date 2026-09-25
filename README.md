@@ -266,6 +266,11 @@ Beräkningar och beteckningar implementerade i applikationen vilar på följande
 
 ---
 
-## 📄 Licens & Upphovsrätt
+## 📄 Upphovsrätt, Licens & Kontaktinformation
 
-© 2026 EDA Toolbox. Utvecklad för elingenjörer, elkonstruktörer, automationstekniker och installatörer.
+- **Upphovsrätt:** © 2026 EDA Toolbox. Alla rättigheter förbehållna.
+- **Licens:** MIT License – fri att använda, distribuera och vidareutveckla.
+- **Utvecklare & Kontaktperson:** Daniel Andersson
+- **E-post:** [doandersson@gmail.com](mailto:doandersson@gmail.com)
+- **Support & Feedback:** Välkommen att skicka funktionsförslag, felrapporter eller önskemål om ytterligare standarder och normer via e-post eller via appens inbyggda kontaktmeny.
+- **Målgrupp:** Elingenjörer, elkonstruktörer, automationstekniker och behöriga installatörer.

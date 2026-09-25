@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ActiveTab, CalculationResult } from '../../types/electrical';
+import { PWAInstallButton } from '../PWAInstallButton';
 import {
   INDUSTRY_NEWS,
   STANDARDS_STATUS,
@@ -40,6 +41,7 @@ interface Props {
   history: (CalculationResult & { label?: string })[];
   onOpenHistory: () => void;
   onOpenBuildInfo?: () => void;
+  onOpenAbout?: () => void;
 }
 
 export const Dashboard: React.FC<Props> = ({
@@ -47,6 +49,7 @@ export const Dashboard: React.FC<Props> = ({
   history,
   onOpenHistory,
   onOpenBuildInfo,
+  onOpenAbout,
 }) => {
   const [selectedSource, setSelectedSource] = useState<string>('Alla');
   const [newsSearch, setNewsSearch] = useState<string>('');
@@ -147,6 +150,15 @@ export const Dashboard: React.FC<Props> = ({
                 <CheckCircle2 className="w-4 h-4 text-cyan-400" />
                 PWA • Fungerar offline i fält
               </span>
+              {onOpenAbout && (
+                <button
+                  onClick={onOpenAbout}
+                  className="flex items-center gap-1.5 bg-slate-950/80 hover:bg-slate-900 px-3 py-1 rounded-lg border border-amber-500/40 hover:border-amber-400 text-amber-300 transition cursor-pointer font-medium"
+                >
+                  <Info className="w-4 h-4 text-amber-400" />
+                  <span>Om appen &amp; Kontakt</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -247,6 +259,8 @@ export const Dashboard: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <PWAInstallButton label="Installera på dator" />
+
           <button
             onClick={() => handleCopy('npm install && npm run dev', 'dash-quick-run')}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 transition cursor-pointer"
@@ -264,6 +278,16 @@ export const Dashboard: React.FC<Props> = ({
               </>
             )}
           </button>
+
+          {onOpenAbout && (
+            <button
+              onClick={onOpenAbout}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-amber-300 text-xs font-semibold border border-amber-500/30 transition cursor-pointer"
+            >
+              <Info className="w-3.5 h-3.5 text-amber-400" />
+              <span>Om appen</span>
+            </button>
+          )}
 
           {onOpenBuildInfo && (
             <button

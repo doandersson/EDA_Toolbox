@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActiveTab } from '../types/electrical';
 import { PWAInstallButton } from './PWAInstallButton';
-import { History as HistoryIcon, Zap, Menu, Newspaper, Home } from 'lucide-react';
+import { History as HistoryIcon, Zap, Menu, Newspaper, Home, Terminal } from 'lucide-react';
 
 interface Props {
   activeTab: ActiveTab;
@@ -10,6 +10,7 @@ interface Props {
   onOpenHistory: () => void;
   onToggleMobileSidebar: () => void;
   referenceSubTab?: string;
+  onOpenBuildInfo?: () => void;
 }
 
 export const Header: React.FC<Props> = ({
@@ -19,6 +20,7 @@ export const Header: React.FC<Props> = ({
   onOpenHistory,
   onToggleMobileSidebar,
   referenceSubTab,
+  onOpenBuildInfo,
 }) => {
   const getTabTitle = () => {
     switch (activeTab) {
@@ -91,6 +93,17 @@ export const Header: React.FC<Props> = ({
             >
               <Newspaper className="w-3.5 h-3.5 text-cyan-400" />
               <span>Nyheter &amp; Start</span>
+            </button>
+          )}
+
+          {onOpenBuildInfo && (
+            <button
+              onClick={onOpenBuildInfo}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-medium transition cursor-pointer"
+              title="Visa information och installationsguide för att bygga applikationen"
+            >
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">Bygg &amp; Installera</span>
             </button>
           )}
 

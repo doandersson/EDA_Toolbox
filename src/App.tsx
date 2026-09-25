@@ -11,6 +11,7 @@ import { ThreePhaseCalculator } from './components/ThreePhase/ThreePhaseCalculat
 import { UnitConverter } from './components/Converter/UnitConverter';
 import { ElectricalReference, RefSubTab } from './components/Reference/ElectricalReference';
 import { HistoryModal } from './components/HistoryModal';
+import { BuildInfoModal } from './components/BuildInfoModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Wifi } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export default function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [history, setHistory] = useState<(CalculationResult & { label?: string })[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [isBuildInfoOpen, setIsBuildInfoOpen] = useState<boolean>(false);
 
   // Load history from localStorage
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function App() {
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         referenceSubTab={referenceSubTab}
+        onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -104,6 +107,7 @@ export default function App() {
           onOpenHistory={() => setIsHistoryOpen(true)}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
           referenceSubTab={referenceSubTab}
+          onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
         />
 
         {/* Dynamic Route Content */}
@@ -113,6 +117,7 @@ export default function App() {
               onSelectTab={handleSelectTab}
               history={history}
               onOpenHistory={() => setIsHistoryOpen(true)}
+              onOpenBuildInfo={() => setIsBuildInfoOpen(true)}
             />
           )}
           {activeTab === 'ohms' && (
@@ -156,6 +161,12 @@ export default function App() {
         history={history}
         onClear={handleClearHistory}
         onDeleteOne={handleDeleteOne}
+      />
+
+      {/* Build & Installation Info Modal */}
+      <BuildInfoModal
+        isOpen={isBuildInfoOpen}
+        onClose={() => setIsBuildInfoOpen(false)}
       />
     </div>
   );

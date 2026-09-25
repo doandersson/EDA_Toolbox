@@ -31,18 +31,22 @@ import {
   Check,
   SlidersHorizontal,
   X,
+  Terminal,
+  Copy,
 } from 'lucide-react';
 
 interface Props {
   onSelectTab: (tab: ActiveTab, subTab?: string) => void;
   history: (CalculationResult & { label?: string })[];
   onOpenHistory: () => void;
+  onOpenBuildInfo?: () => void;
 }
 
 export const Dashboard: React.FC<Props> = ({
   onSelectTab,
   history,
   onOpenHistory,
+  onOpenBuildInfo,
 }) => {
   const [selectedSource, setSelectedSource] = useState<string>('Alla');
   const [newsSearch, setNewsSearch] = useState<string>('');
@@ -215,6 +219,61 @@ export const Dashboard: React.FC<Props> = ({
             <span>Öppna Spänningsfall</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+      </div>
+
+      {/* Feature 2: Build & Installation Information Banner */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+            <Terminal className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-bold text-white text-sm">
+                Bygg &amp; Installera Applikationen Lokalt
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+                NODE.JS 18+ / 20+
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                VITE + REACT 19
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5 max-w-2xl leading-relaxed">
+              Snabbstart: Kör <code className="bg-slate-950 px-1.5 py-0.5 rounded text-amber-300 font-mono text-[11px] border border-slate-800">npm install</code> följt av <code className="bg-slate-950 px-1.5 py-0.5 rounded text-cyan-300 font-mono text-[11px] border border-slate-800">npm run dev</code>. Skapa produktionsbygge med <code className="bg-slate-950 px-1.5 py-0.5 rounded text-emerald-300 font-mono text-[11px] border border-slate-800">npm run build</code>.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            onClick={() => handleCopy('npm install && npm run dev', 'dash-quick-run')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 transition cursor-pointer"
+            title="Kopiera snabbstartskommando"
+          >
+            {copiedText === 'dash-quick-run' ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Kopierat!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                <span>Kopiera start</span>
+              </>
+            )}
+          </button>
+
+          {onOpenBuildInfo && (
+            <button
+              onClick={onOpenBuildInfo}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition cursor-pointer shadow-md shadow-cyan-600/20"
+            >
+              <span>Installationsguide</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

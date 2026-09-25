@@ -184,6 +184,25 @@ export function createVoltageDropReportData(params: {
         requirement: 'Spänningsfallet från matningspunkten till valfri punkt i maskinens elutrustning får normalt inte överstiga 5% av den nominella spänningen vid normal drift.',
       },
     ],
+
+    diagram: {
+      type: 'voltage_drop',
+      data: {
+        voltage: params.voltage,
+        endVoltage: params.endVoltage,
+        current: params.current,
+        length: params.length,
+        area: params.area,
+        material: params.material,
+        deltaU: params.deltaU,
+        dropPercent: params.dropPercent,
+        maxDropPct: params.maxDropPct,
+        isWithinLimit: params.isWithinLimit,
+        phaseType: params.phaseType,
+        rCable: params.rSingle * (is1P ? 2 : 1),
+        powerLoss: params.powerLoss,
+      },
+    },
   };
 }
 
@@ -330,6 +349,18 @@ export function createOhmsLawReportData(params: {
         requirement: 'Ledare skall skyddas mot överström orsakad av överbelastning och kortslutning i enlighet med maskinens märkdata.',
       },
     ],
+
+    diagram: {
+      type: 'ohms_circle',
+      data: {
+        voltage: params.result.voltage,
+        current: params.result.current,
+        resistance: params.result.resistance,
+        power: params.result.power,
+        isThreePhase: is3P,
+        connection: params.result.threePhaseConnection,
+      },
+    },
   };
 }
 
@@ -474,6 +505,282 @@ export function createThreePhaseReportData(params: {
         requirement: 'Varje motor över 0.5 kW skall förses med överbelastningsskydd som bryter alla faser vid överström.',
       },
     ],
+
+    diagram: {
+      type: 'power_triangle',
+      data: {
+        voltage: params.voltage,
+        current: params.current,
+        activePowerKw: params.activePowerW / 1000,
+        apparentPowerKva: params.apparentPowerVA / 1000,
+        reactivePowerKvar: params.reactivePowerVAr / 1000,
+        cosPhi: params.cosPhi,
+        efficiency: params.efficiency,
+      },
+    },
+  };
+}
+
+/**
+ * Creates a complete, professional PdfReportData for Star/Delta Comparison
+ */
+export function createStarDeltaReportData(params: {
+  voltage: number;
+  resistance: number;
+  uStarElem: number;
+  iStarLine: number;
+  pStarTotal: number;
+  uDeltaElem: number;
+  iDeltaLine: number;
+  pDeltaTotal: number;
+  projectName?: string;
+  authorName?: string;
+  clientName?: string;
+}): PdfReportData {
+  return {
+    calculationType: 'three_phase',
+    title: 'Teknisk Rapport: Stjärn- & Deltakoppling (Y / Δ)',
+    subtitle: 'Jämförelse av spänning över element, linjeströmmar och avgiven totaleffekt vid Y- vs Δ-koppling',
+    docCode: '&BD01',
+    systemTag: '=P1 +W1 -QA01',
+    projectName: params.projectName || 'Y/D Motor- eller Värmeinstallation',
+    authorName: params.authorName || 'Elkonstruktör / EDA Toolbox',
+    clientName: params.clientName || 'Fastighetsägare / Industrikund',
+    dateStr: new Date().toISOString().split('T')[0],
+    notes: `Jämförelse vid ${params.voltage} V huvudspänning och ${params.resistance} Ω elementresistans.`,
+
+    statusBadge: {
+      text: `Effektförhållande P_Δ / P_Y = 3.00 (Effekt: ${formatElectrNumber(params.pStarTotal / 1000, 2)} kW i Y mot ${formatElectrNumber(params.pDeltaTotal / 1000, 2)} kW i Δ)`,
+      type: 'info',
+    },
+
+    inputs: [
+      {
+        label: 'Huvudspänning (U_L)',
+        value: `${params.voltage}`,
+        unit: 'V',
+        description: 'Mellan fasledare L1, L2, L3',
+      },
+      {
+        label: 'Elementresistans (R_elem)',
+        value: `${params.resistance}`,
+        unit: 'Ω',
+        description: 'Resistans per element / faslindning',
+      },
+    ],
+
+    results: [
+      {
+        label: 'Effekt i Stjärna (P_Y)',
+        value: `${formatElectrNumber(params.pStarTotal / 1000, 2)}`,
+        unit: 'kW',
+        highlight: false,
+        description: '1/3 av deltaeffekten (Startläge / dellast)',
+      },
+      {
+        label: 'Effekt i Delta (P_Δ)',
+        value: `${formatElectrNumber(params.pDeltaTotal / 1000, 2)}`,
+        unit: 'kW',
+        highlight: true,
+        description: 'Full effekt (Märkdriftläge)',
+      },
+      {
+        label: 'Linjeström i Y (I_L,Y)',
+        value: `${formatElectrNumber(params.iStarLine, 2)}`,
+        unit: 'A',
+        highlight: false,
+        description: 'Ström från matande elnät i stjärnkoppling',
+      },
+      {
+        label: 'Linjeström i Δ (I_L,Δ)',
+        value: `${formatElectrNumber(params.iDeltaLine, 2)}`,
+        unit: 'A',
+        highlight: true,
+        description: 'Ström i deltakoppling (√3 · I_fas, 3× högre än Y)',
+      },
+    ],
+
+    formula: {
+      name: 'Stjärna/Delta-transformation & effektförhållande',
+      formulaText: 'P_Δ / P_Y = 3   |   I_L,Δ / I_L,Y = 3   |   U_elem,Y = U_L / √3   |   U_elem,Δ = U_L',
+      secondaryFormula: 'P_Y = 3 · (U_L / √3)² / R = U_L² / R   |   P_Δ = 3 · U_L² / R',
+      substitutionText: `Stjärna (Y):\nU_elem = ${params.voltage} / 1.732 = ${formatElectrNumber(params.uStarElem, 1)} V\nI_L = ${formatElectrNumber(params.uStarElem, 1)} V / ${params.resistance} Ω = ${formatElectrNumber(params.iStarLine, 2)} A\nP_Y = 3 · (${formatElectrNumber(params.uStarElem, 1)})² / ${params.resistance} = ${formatElectrNumber(params.pStarTotal / 1000, 2)} kW\n\nDelta (Δ):\nU_elem = ${params.voltage} V\nI_elem = ${params.voltage} / ${params.resistance} = ${formatElectrNumber(params.uDeltaElem / params.resistance, 2)} A\nI_L = √3 · ${formatElectrNumber(params.uDeltaElem / params.resistance, 2)} = ${formatElectrNumber(params.iDeltaLine, 2)} A\nP_Δ = 3 · (${params.voltage})² / ${params.resistance} = ${formatElectrNumber(params.pDeltaTotal / 1000, 2)} kW`,
+      variableExplanations: [
+        { symbol: 'U_L', meaning: 'Huvudspänning (400 V nominellt)' },
+        { symbol: 'R_elem', meaning: 'Enskilt motstånd / faslindningsresistans' },
+        { symbol: 'Y', meaning: 'Stjärnkoppling med gemensam stjärnpunkt' },
+        { symbol: 'Δ', meaning: 'Deltakoppling med element i sluten triangel' },
+      ],
+    },
+
+    description: {
+      summary: `Analysen visar att deltakoppling utvecklar exakt 3 gånger högre effekt (${formatElectrNumber(params.pDeltaTotal / 1000, 2)} kW jämfört med ${formatElectrNumber(params.pStarTotal / 1000, 2)} kW i stjärna) och drar 3 gånger högre linjeström från elnätet (${formatElectrNumber(params.iDeltaLine, 1)} A mot ${formatElectrNumber(params.iStarLine, 1)} A).`,
+      technicalAssessment: 'Vid Y/D-start av asynkronmotorer sänks startströmmen med 67 % under uppstarten i Y-läge, vilket avlastar transformatorer och förhindrar spänningsdippar i anläggningen. För värmepatroner ger Y/D-omkoppling en energieffektiv stegreglering i förhållandet 1:3.',
+      recommendations: [
+        'Säkerställ att motorns märkskylt anger 400/690V om motorn skall köras i delta vid svensk 400V nätspänning. En 230/400V motor blir överspänd och bränns vid anslutning i delta.',
+        'Vid Y/D-startkopplare skall överströmsreläet (termiska skyddet) placeras i fasledaren och ställas in på motorns märkfasström (In / √3 = 0.58 · In).',
+        'Ställ omkopplingstiden mellan Y och Δ så att motorn hinner uppnå minst 85–90 % av märkvarvtalet innan omslag sker.',
+      ],
+    },
+
+    sources: [
+      {
+        standard: 'SS-EN 60947-4-1',
+        section: 'Kopplingsapparater: Y/D-startare',
+        title: 'Apparater för lågspänning – Kontaktorer och motorskydd',
+        requirement: 'Krav på förregling och växlingstid för Y/D-startare för att undvika fas-kortslutning vid omkoppling.',
+      },
+      {
+        standard: 'SEK Handbok 444',
+        section: 'Avsnitt 3',
+        title: 'Trefasbelastningar och startmetoder för elmotorer',
+        requirement: 'Riktlinjer för val av startmetod beroende på nätets förimpedans och lokala nätägares föreskrifter.',
+      },
+    ],
+
+    diagram: {
+      type: 'star_delta',
+      data: {
+        voltage: params.voltage,
+        resistance: params.resistance,
+        uStarElem: params.uStarElem,
+        iStarLine: params.iStarLine,
+        pStarTotal: params.pStarTotal,
+        uDeltaElem: params.uDeltaElem,
+        iDeltaLine: params.iDeltaLine,
+        pDeltaTotal: params.pDeltaTotal,
+      },
+    },
+  };
+}
+
+/**
+ * Creates a complete, professional PdfReportData for Unbalanced Neutral Current calculation
+ */
+export function createNeutralCurrentReportData(params: {
+  iL1: number;
+  iL2: number;
+  iL3: number;
+  iNeutral: number;
+  projectName?: string;
+  authorName?: string;
+  clientName?: string;
+}): PdfReportData {
+  const isBalanced = params.iNeutral < 0.05 && params.iL1 > 0;
+  const isHighNeutral = params.iNeutral > Math.max(params.iL1, params.iL2, params.iL3) * 0.8;
+
+  return {
+    calculationType: 'three_phase',
+    title: 'Teknisk Beräkningsrapport: Nollströmsanalys (I_N)',
+    subtitle: 'Analytisk vektorsummering av fasströmmar med 120° förskjutning vid osymmetrisk fasbelastning',
+    docCode: '&BD01',
+    systemTag: '=P1 +W1 -W00',
+    projectName: params.projectName || 'Centralbelastning & Nollströmsmätning',
+    authorName: params.authorName || 'Elkonstruktör / EDA Toolbox',
+    clientName: params.clientName || 'Fastighetsägare / Driftansvarig',
+    dateStr: new Date().toISOString().split('T')[0],
+    notes: `Fasströmmar: L1 = ${params.iL1} A, L2 = ${params.iL2} A, L3 = ${params.iL3} A.`,
+
+    statusBadge: {
+      text: isBalanced
+        ? 'Perfekt balanserad symmetrisk last (I_N = 0.00 A)'
+        : `Obalanserad trefaslast – Nollström I_N = ${formatElectrNumber(params.iNeutral, 2)} A`,
+      type: isBalanced ? 'success' : isHighNeutral ? 'warning' : 'info',
+    },
+
+    inputs: [
+      {
+        label: 'Ström Fas L1 (Brun)',
+        value: `${params.iL1}`,
+        unit: 'A',
+        description: 'Vinkel 0°',
+      },
+      {
+        label: 'Ström Fas L2 (Svart)',
+        value: `${params.iL2}`,
+        unit: 'A',
+        description: 'Vinkel 240°',
+      },
+      {
+        label: 'Ström Fas L3 (Grå)',
+        value: `${params.iL3}`,
+        unit: 'A',
+        description: 'Vinkel 120°',
+      },
+    ],
+
+    results: [
+      {
+        label: 'Ström i Nollan (I_N)',
+        value: `${formatElectrNumber(params.iNeutral, 2)}`,
+        unit: 'A',
+        highlight: true,
+        description: isBalanced ? 'Ingen ström i nollan' : 'Returström genom neutralledaren',
+      },
+      {
+        label: 'Max Fasström',
+        value: `${formatElectrNumber(Math.max(params.iL1, params.iL2, params.iL3), 1)}`,
+        unit: 'A',
+        highlight: false,
+        description: 'Högst belastad fasledare',
+      },
+      {
+        label: 'Belastningsgrad I_N / I_max',
+        value: `${Math.max(params.iL1, params.iL2, params.iL3) > 0 ? formatElectrNumber((params.iNeutral / Math.max(params.iL1, params.iL2, params.iL3)) * 100, 1) : 0}`,
+        unit: '%',
+        highlight: false,
+        description: 'Nollströmmens andel av högsta fasström',
+      },
+    ],
+
+    formula: {
+      name: 'Vektorsummering av 3-fasströmmar i nollan (Kirchhoffs strömlag)',
+      formulaText: 'I_N = √(I₁² + I₂² + I₃² - I₁·I₂ - I₂·I₃ - I₃·I₁)',
+      secondaryFormula: 'I_N = |-(I_L1 + I_L2·e^(j·240°) + I_L3·e^(j·120°))|',
+      substitutionText: `I_N = √(${params.iL1}² + ${params.iL2}² + ${params.iL3}² - ${params.iL1}·${params.iL2} - ${params.iL2}·${params.iL3} - ${params.iL3}·${params.iL1})\nI_N = √(${params.iL1 * params.iL1} + ${params.iL2 * params.iL2} + ${params.iL3 * params.iL3} - ${params.iL1 * params.iL2} - ${params.iL2 * params.iL3} - ${params.iL3 * params.iL1})\nI_N = ${formatElectrNumber(params.iNeutral, 2)} A`,
+      variableExplanations: [
+        { symbol: 'I_1, I_2, I_3', meaning: 'Strömmar i respektive fasledare L1, L2, L3' },
+        { symbol: 'I_N', meaning: 'Resulterande ström i neutralledaren' },
+        { symbol: '120°', meaning: 'Symmetrisk geometrisk fasförskjutning i trefasnätet' },
+      ],
+    },
+
+    description: {
+      summary: `Beräkningen visar att snedbelastningen mellan faserna L1 (${params.iL1} A), L2 (${params.iL2} A) och L3 (${params.iL3} A) ger en returström i neutralledaren på ${formatElectrNumber(params.iNeutral, 2)} A.`,
+      technicalAssessment: isHighNeutral
+        ? 'OBS! Den beräknade nollströmmen är hög i förhållande till fasströmmarna. Neutralledaren får inte ha reducerad area. Omfördela enfasgrupper i centralen för att jämna ut belastningen.'
+        : 'Nollströmmen är väl inom toleransen och neutralledaren utsätts inte för otillåten överbelastning.',
+      recommendations: [
+        'Enfasgrupper i gruppcentralen bör fördelas jämnt mellan L1, L2 och L3 för att minimera nollströmmen.',
+        'I anläggningar med stora mängder switchade nätaggregat och LED-driftdon kan 3:e övertonen (150 Hz) addera i nollan snarare än ta ut varandra. Neutralledaren skall då alltid ha minst samma area som fasledarna.',
+        'Kontrollera åtdragningsmoment i nollplinten; glapp i neutralledaren vid osymmetrisk last leder till farlig spänningsförskjutning (flytande nolla) som förstör 230V-apparater.',
+      ],
+    },
+
+    sources: [
+      {
+        standard: 'SS 436 40 00:2023',
+        section: 'Avsnitt 523.5 & 524',
+        title: 'Neutralledarens dimensionering och övertonsströmmar',
+        requirement: 'Neutralledaren skall normalt ha samma area som fasledarna. Vid förekomst av övertoner kan neutralledaren behöva överdimensioneras.',
+      },
+      {
+        standard: 'SEK Handbok 444',
+        section: 'Kapitel 4',
+        title: 'Obalans och nollpunktsförskjutning i distributionsnät',
+        requirement: 'Riktlinjer för fasbalansering och riskbedömning vid nollströmsuppkomst.',
+      },
+    ],
+
+    diagram: {
+      type: 'neutral_phasor',
+      data: {
+        iL1: params.iL1,
+        iL2: params.iL2,
+        iL3: params.iL3,
+        iNeutral: params.iNeutral,
+      },
+    },
   };
 }
 

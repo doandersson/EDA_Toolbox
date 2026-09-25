@@ -39,6 +39,11 @@ export interface PdfReportDescription {
   recommendations: string[];
 }
 
+export interface PdfReportDiagram {
+  type: 'voltage_drop' | 'power_triangle' | 'star_delta' | 'neutral_phasor' | 'ohms_circle';
+  data: Record<string, any>;
+}
+
 export interface PdfReportData {
   calculationType: 'voltage_drop' | 'ohms_law' | 'three_phase' | 'series_parallel';
   title: string;
@@ -63,4 +68,7 @@ export interface PdfReportData {
   formula: PdfReportFormula;
   description: PdfReportDescription;
   sources: PdfReportSource[];
+
+  // Optional diagram / schematic graphics data
+  diagram?: PdfReportDiagram;
 }

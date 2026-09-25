@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PdfReportData } from '../../types/report';
 import { generateCalculationPdf } from '../../utils/generateCalculationPdf';
+import { formatElectrNumber } from '../../utils/electricalMath';
 import {
   X,
   Download,
@@ -515,6 +516,191 @@ export const CalculationPdfReportModal: React.FC<Props> = ({
                   ))}
                 </div>
               </div>
+
+              {/* Graphic Circuit Schematic & Tolerance Diagram (Matching PDF) */}
+              {data.diagram?.type === 'voltage_drop' && (() => {
+                const d = data.diagram.data;
+                const isOk = d.isWithinLimit;
+                const clampedPct = Math.min(6.0, Math.max(0, d.dropPercent));
+                const needlePct = (clampedPct / 6.0) * 100;
+                return (
+                  <div className="space-y-1.5 border border-slate-200 rounded p-2.5 bg-slate-50/70">
+                    <div className="font-bold text-xs uppercase text-slate-800 tracking-wider">
+                      Kretsschema & Spänningsgradient
+                    </div>
+                    <div className="w-full">
+                      <svg viewBox="0 0 680 90" className="w-full h-auto select-none" xmlns="http://www.w3.org/2000/svg">
+                        {/* Source Box */}
+                        <g transform="translate(10, 6)">
+                          <rect x="0" y="0" width="130" height="74" rx="6" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" />
+                          <text x="65" y="16" textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="bold">MATNING / NÄT</text>
+                          <text x="65" y="38" textAnchor="middle" fill="#0f172a" fontSize="16" fontWeight="bold" fontFamily="monospace">{d.voltage} V</text>
+                          <text x="65" y="52" textAnchor="middle" fill="#0284c7" fontSize="8.5" fontWeight="600">{d.phaseType === '1-phase' ? '1-Fas (230V)' : '3-Fas (400V)'}</text>
+                          <text x="65" y="65" textAnchor="middle" fill="#94a3b8" fontSize="7.5">Nominell spänning</text>
+                        </g>
+
+                        {/* Cable Lines & Tags */}
+                        <g transform="translate(140, 6)">
+                          <line x1="0" y1="28" x2="390" y2="28" stroke="#0284c7" strokeWidth="2.5" />
+                          <line x1="0" y1="46" x2="390" y2="46" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4,4" />
+
+                          <rect x="110" y="6" width="170" height="32" rx="4" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" />
+                          <text x="195" y="20" textAnchor="middle" fill="#b45309" fontSize="9.5" fontWeight="bold">
+                            Kabel: {d.length} m • {d.area} mm² ({d.material === 'cu' ? 'Cu' : 'Al'})
+                          </text>
+                          <text x="195" y="32" textAnchor="middle" fill="#334155" fontSize="8.5" fontFamily="monospace">
+                            I = {d.current} A  •  R = {formatElectrNumber(d.rCable, 3)} Ω
+                          </text>
+
+                          <rect x="115" y="44" width="160" height="24" rx="4" fill={isOk ? '#ecfdf5' : '#fef2f2'} stroke={isOk ? '#10b981' : '#ef4444'} strokeWidth="1" />
+                          <text x="195" y="56" textAnchor="middle" fill={isOk ? '#065f46' : '#991b1b'} fontSize="8.5" fontWeight="bold">
+                            ΔU = -{formatElectrNumber(d.deltaU, 2)} V (-{formatElectrNumber(d.dropPercent, 2)}%)
+                          </text>
+                          <text x="195" y="65" textAnchor="middle" fill={isOk ? '#047857' : '#b91c1c'} fontSize="7.5" fontFamily="monospace">
+                            P_förlust = {formatElectrNumber(d.powerLoss, 1)} W
+                          </text>
+                        </g>
+
+                        {/* Load Box */}
+                        <g transform="translate(530, 6)">
+                          <rect x="0" y="0" width="140" height="74" rx="6" fill={isOk ? '#f0fdf4' : '#fef2f2'} stroke={isOk ? '#10b981' : '#ef4444'} strokeWidth="1" />
+                          <text x="70" y="16" textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="bold">FÖRBRUKARE / LAST</text>
+                          <text x="70" y="38" textAnchor="middle" fill={isOk ? '#166534' : '#991b1b'} fontSize="16" fontWeight="bold" fontFamily="monospace">{formatElectrNumber(d.endVoltage, 1)} V</text>
+                          <text x="70" y="52" textAnchor="middle" fill="#64748b" fontSize="8.5">Spänning vid plint</text>
+                          <text x="70" y="65" textAnchor="middle" fill={isOk ? '#16a34a' : '#dc2626'} fontSize="8" fontWeight="bold">
+                            {isOk ? '✓ GODKÄND' : '⚠ ÖVERSKRIDER GRÄNS'}
+                          </text>
+                        </g>
+                      </svg>
+                    </div>
+
+                    {/* Tolerance meter in preview */}
+                    <div className="space-y-1 pt-0.5">
+                      <div className="relative pt-4 pb-1">
+                        <div className="h-2 w-full rounded bg-slate-200 flex overflow-hidden border border-slate-300">
+                          <div className="h-full bg-emerald-500" style={{ width: '50%' }} />
+                          <div className="h-full bg-amber-400" style={{ width: '16.67%' }} />
+                          <div className="h-full bg-rose-500" style={{ width: '33.33%' }} />
+                        </div>
+                        <div
+                          className="absolute top-0 -translate-x-1/2 flex flex-col items-center pointer-events-none"
+                          style={{ left: `${needlePct}%` }}
+                        >
+                          <span className={`px-1.5 py-0.2 rounded text-[7.5px] font-mono font-bold text-white ${
+                            isOk ? 'bg-emerald-600' : 'bg-rose-600'
+                          }`}>
+                            {formatElectrNumber(d.dropPercent, 2)}%
+                          </span>
+                          <div className={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] ${
+                            isOk ? 'border-t-emerald-600' : 'border-t-rose-600'
+                          }`} />
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-[7.5px] text-slate-500 font-mono">
+                        <span>0%</span>
+                        <span className="text-emerald-700 font-semibold">3% (SS 436 40 00 rekommendation)</span>
+                        <span className="text-amber-700 font-semibold">4% (Max standardgräns)</span>
+                        <span>6%+</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Power Triangle in Preview */}
+              {data.diagram?.type === 'power_triangle' && (() => {
+                const d = data.diagram.data;
+                return (
+                  <div className="space-y-1.5 border border-slate-200 rounded p-2.5 bg-slate-50/70">
+                    <div className="font-bold text-xs uppercase text-slate-800 tracking-wider">
+                      Effekttriangel & Vektorrelationer (P, Q, S)
+                    </div>
+                    <div className="grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-7">
+                        <svg viewBox="0 0 320 140" className="w-full h-auto select-none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="0" y="0" width="320" height="140" rx="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5" />
+                          {/* Triangle: (40, 115) -> (200, 115) -> (200, 30) */}
+                          <line x1="40" y1="115" x2="200" y2="115" stroke="#f43f5e" strokeWidth="2.5" />
+                          <line x1="200" y1="115" x2="200" y2="30" stroke="#f59e0b" strokeWidth="2.5" />
+                          <line x1="40" y1="115" x2="200" y2="30" stroke="#0284c7" strokeWidth="2.5" />
+                          <path d="M 188,115 L 188,103 L 200,103" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                          <path d="M 65,115 A 25 25 0 0 0 63,100" fill="none" stroke="#eab308" strokeWidth="1.5" />
+                          <text x="68" y="108" fill="#ca8a04" fontSize="8" fontWeight="bold">φ</text>
+
+                          <text x="120" y="128" textAnchor="middle" fill="#f43f5e" fontSize="9" fontWeight="bold">P = {formatElectrNumber(d.activePowerKw, 2)} kW</text>
+                          <text x="208" y="75" fill="#d97706" fontSize="9" fontWeight="bold">Q = {formatElectrNumber(d.reactivePowerKvar, 2)} kVAr</text>
+                          <text x="105" y="65" fill="#0284c7" fontSize="9" fontWeight="bold">S = {formatElectrNumber(d.apparentPowerKva, 2)} kVA</text>
+                        </svg>
+                      </div>
+                      <div className="col-span-5 space-y-1 text-[9px] font-mono p-2 bg-white rounded border border-slate-200">
+                        <div className="font-bold text-slate-800 text-[10px]">Fasegenskaper:</div>
+                        <div>Effektfaktor cos φ: <strong className="text-amber-700">{formatElectrNumber(d.cosPhi, 2)}</strong></div>
+                        <div>Verkningsgrad η: <strong className="text-emerald-700">{formatElectrNumber(d.efficiency * 100, 1)}%</strong></div>
+                        <div>Linjeström: <strong className="text-slate-900">{formatElectrNumber(d.current, 2)} A</strong></div>
+                        <div className="text-[8px] text-slate-500 pt-1">S = √(P² + Q²) = √3·U·I</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Star / Delta in Preview */}
+              {data.diagram?.type === 'star_delta' && (() => {
+                const d = data.diagram.data;
+                return (
+                  <div className="space-y-1.5 border border-slate-200 rounded p-2.5 bg-slate-50/70">
+                    <div className="font-bold text-xs uppercase text-slate-800 tracking-wider">
+                      Kopplingsschema: Stjärna (Y) vs Delta (Δ)
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-[9px] font-mono">
+                      <div className="p-2 rounded bg-sky-50 border border-sky-200 space-y-1">
+                        <span className="font-bold text-sky-800 block text-[10px]">STJÄRNKOPPLING (Y)</span>
+                        <div>Elementspänning: <strong>{formatElectrNumber(d.uStarElem, 1)} V</strong></div>
+                        <div>Linjeström: <strong>{formatElectrNumber(d.iStarLine, 2)} A</strong></div>
+                        <div>Total Effekt: <strong className="text-sky-700">{formatElectrNumber(d.pStarTotal / 1000, 2)} kW</strong> (1/3 av delta)</div>
+                      </div>
+                      <div className="p-2 rounded bg-amber-50 border border-amber-200 space-y-1">
+                        <span className="font-bold text-amber-800 block text-[10px]">DELTAKOPPLING (Δ)</span>
+                        <div>Elementspänning: <strong>{d.voltage} V</strong> (Full U_L)</div>
+                        <div>Linjeström: <strong>{formatElectrNumber(d.iDeltaLine, 2)} A</strong> (3× Y-ström)</div>
+                        <div>Total Effekt: <strong className="text-amber-700">{formatElectrNumber(d.pDeltaTotal / 1000, 2)} kW</strong> (3× Y-effekt)</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Neutral Phasor in Preview */}
+              {data.diagram?.type === 'neutral_phasor' && (() => {
+                const d = data.diagram.data;
+                return (
+                  <div className="space-y-1.5 border border-slate-200 rounded p-2.5 bg-slate-50/70">
+                    <div className="font-bold text-xs uppercase text-slate-800 tracking-wider">
+                      Visardiagram: Fasströmmar & Nollström
+                    </div>
+                    <div className="grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-5 flex justify-center">
+                        <svg viewBox="0 0 160 140" className="w-32 h-28" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="80" cy="70" r="55" fill="none" stroke="#cbd5e1" strokeWidth="0.8" strokeDasharray="2,2" />
+                          <line x1="80" y1="70" x2="135" y2="70" stroke="#b45309" strokeWidth="2" />
+                          <line x1="80" y1="70" x2="52" y2="117" stroke="#64748b" strokeWidth="2" />
+                          <line x1="80" y1="70" x2="52" y2="23" stroke="#475569" strokeWidth="2" />
+                          <circle cx="80" cy="70" r="3" fill="#0284c7" />
+                          <text x="138" y="73" fill="#b45309" fontSize="7" fontWeight="bold">L1</text>
+                          <text x="40" y="125" fill="#64748b" fontSize="7" fontWeight="bold">L2</text>
+                          <text x="40" y="20" fill="#475569" fontSize="7" fontWeight="bold">L3</text>
+                        </svg>
+                      </div>
+                      <div className="col-span-7 space-y-1 text-[9px] font-mono p-2 bg-white rounded border border-slate-200">
+                        <div className="font-bold text-slate-800 text-[10px]">Vektorsumma & Returström:</div>
+                        <div>Fasströmmar: L1 = {d.iL1}A, L2 = {d.iL2}A, L3 = {d.iL3}A</div>
+                        <div className="text-sky-700 font-bold text-xs">Ström i nollan: {formatElectrNumber(d.iNeutral, 2)} A</div>
+                        <div className="text-[8px] text-slate-500">I_N = √(I₁² + I₂² + I₃² - I₁I₂ - I₂I₃ - I₃I₁)</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 2. Indata & Förutsättningar */}
               <div className="space-y-1.5">

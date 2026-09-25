@@ -19,6 +19,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  Terminal,
 } from 'lucide-react';
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
   isOpenMobile: boolean;
   onCloseMobile: () => void;
   referenceSubTab?: string;
+  onOpenBuildInfo?: () => void;
 }
 
 export const Sidebar: React.FC<Props> = ({
@@ -39,6 +41,7 @@ export const Sidebar: React.FC<Props> = ({
   isOpenMobile,
   onCloseMobile,
   referenceSubTab,
+  onOpenBuildInfo,
 }) => {
   const handleNavClick = (tab: ActiveTab, subTab?: string) => {
     onSelectTab(tab, subTab);
@@ -267,7 +270,23 @@ export const Sidebar: React.FC<Props> = ({
         </div>
 
         {/* Bottom Actions & Offline Status */}
-        <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/90 space-y-2.5">
+        <div className="p-3.5 border-t border-slate-800/80 bg-slate-950/90 space-y-2">
+          {onOpenBuildInfo && (
+            <button
+              onClick={() => {
+                onOpenBuildInfo();
+                onCloseMobile();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 transition cursor-pointer group"
+            >
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" />
+                <span>Bygg &amp; Installation</span>
+              </div>
+              <span className="text-[10px] text-slate-500 font-mono">CLI / PWA</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               onOpenHistory();

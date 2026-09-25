@@ -3,13 +3,21 @@ import { formatElectrNumber, calculateNeutralCurrent } from '../../utils/electri
 import { Cpu, Zap, ArrowLeftRight, Activity, ShieldAlert, CheckCircle2, Info, FileText } from 'lucide-react';
 import { FormulaTheoryCard, FormulaVariable } from '../FormulaTheoryCard';
 import { CalculationPdfReportModal } from '../Report/CalculationPdfReportModal';
-import { createThreePhaseReportData } from '../../utils/reportHelpers';
+import {
+  createThreePhaseReportData,
+  createStarDeltaReportData,
+  createNeutralCurrentReportData,
+} from '../../utils/reportHelpers';
+import { PdfReportData } from '../../types/report';
+import { PowerTriangleDiagram } from './PowerTriangleDiagram';
+import { StarDeltaDiagram } from './StarDeltaDiagram';
+import { PhasorDiagram } from './PhasorDiagram';
 
 type ThreePhaseTab = 'motor_power' | 'star_delta' | 'neutral_current';
 
 export const ThreePhaseCalculator: React.FC = () => {
   const [subTab, setSubTab] = useState<ThreePhaseTab>('motor_power');
-  const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
+  const [activeReportData, setActiveReportData] = useState<PdfReportData | null>(null);
 
   // --- SubTab 1: Power & Current ---
   const [solveFor, setSolveFor] = useState<'power' | 'current'>('power');
@@ -259,7 +267,20 @@ export const ThreePhaseCalculator: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setShowPdfModal(true)}
+                onClick={() =>
+                  setActiveReportData(
+                    createThreePhaseReportData({
+                      solveFor,
+                      voltage: U,
+                      current: calcCurrent,
+                      activePowerW: calcP,
+                      apparentPowerVA: calcS,
+                      reactivePowerVAr: calcQ,
+                      cosPhi: pf,
+                      efficiency: eta,
+                    })
+                  )
+                }
                 className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-sm shadow-amber-500/20 w-fit shrink-0"
                 title="Skapa en professionell A4 PDF-rapport med källor och teknisk beskrivning"
               >
@@ -325,6 +346,19 @@ export const ThreePhaseCalculator: React.FC = () => {
             <div className="mt-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-mono text-slate-300">
               <strong>Snabböversikt 3-fas: </strong>
               P = √3 · U · I · cos φ · η = 1,732 · {U} V · {formatElectrNumber(calcCurrent, 2)} A · {pf} · {eta} = {formatElectrNumber(calcP / 1000, 2)} kW
+            </div>
+
+            {/* Modern Vector Power Triangle Graphic */}
+            <div className="pt-2">
+              <PowerTriangleDiagram
+                voltage={U}
+                current={calcCurrent}
+                activePowerW={calcP}
+                apparentPowerVA={calcS}
+                reactivePowerVAr={calcQ}
+                cosPhi={pf}
+                efficiency={eta}
+              />
             </div>
           </div>
 
@@ -403,14 +437,39 @@ export const ThreePhaseCalculator: React.FC = () => {
       {/* VIEW 2: Star vs Delta Comparison */}
       {subTab === 'star_delta' && (
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-5 animate-in fade-in duration-150">
-          <div className="border-b border-slate-800 pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <ArrowLeftRight className="w-5 h-5 text-amber-400" />
-              <span>Jämförelse av Y-koppling (Stjärna) och Δ-koppling (Delta / Triangel)</span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Se hur spänning över elementen, linjeström och avgiven effekt förändras när 3 likadana motstånd kopplas i Y jämfört med Δ.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <ArrowLeftRight className="w-5 h-5 text-amber-400" />
+                <span>Jämförelse av Y-koppling (Stjärna) och Δ-koppling (Delta / Triangel)</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Se hur spänning över elementen, linjeström och avgiven effekt förändras när 3 likadana motstånd kopplas i Y jämfört med Δ.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setActiveReportData(
+                  createStarDeltaReportData({
+                    voltage: U_sd,
+                    resistance: R_elem,
+                    uStarElem: U_star_elem,
+                    iStarLine: I_star_line,
+                    pStarTotal: P_star_total,
+                    uDeltaElem: U_delta_elem,
+                    iDeltaLine: I_delta_line,
+                    pDeltaTotal: P_delta_total,
+                  })
+                )
+              }
+              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-sm shadow-amber-500/20 w-fit shrink-0"
+              title="Skapa en professionell A4 PDF-rapport med källor och teknisk beskrivning"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Spara som PDF-rapport (A4)</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -436,6 +495,20 @@ export const ThreePhaseCalculator: React.FC = () => {
                 placeholder="24"
               />
             </div>
+          </div>
+
+          {/* Modern Star / Delta Schematics Graphic */}
+          <div className="pt-1">
+            <StarDeltaDiagram
+              voltage={U_sd}
+              resistance={R_elem}
+              uStarElem={U_star_elem}
+              iStarLine={I_star_line}
+              pStarTotal={P_star_total}
+              uDeltaElem={U_delta_elem}
+              iDeltaLine={I_delta_line}
+              pDeltaTotal={P_delta_total}
+            />
           </div>
 
           {/* Comparison Cards: Y vs Delta */}
@@ -572,14 +645,35 @@ export const ThreePhaseCalculator: React.FC = () => {
       {/* VIEW 3: Unbalanced Neutral Current */}
       {subTab === 'neutral_current' && (
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-5 animate-in fade-in duration-150">
-          <div className="border-b border-slate-800 pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-amber-400" />
-              <span>Nollströmsberäkning vid osymmetrisk belastning (I_N)</span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Beräkna returströmmen i neutralledaren (nollan) när de tre faserna L1, L2 och L3 belastas ojämnt med 120° fasförskjutning.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-amber-400" />
+                <span>Nollströmsberäkning vid osymmetrisk belastning (I_N)</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Beräkna returströmmen i neutralledaren (nollan) när de tre faserna L1, L2 och L3 belastas ojämnt med 120° fasförskjutning.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setActiveReportData(
+                  createNeutralCurrentReportData({
+                    iL1: numL1,
+                    iL2: numL2,
+                    iL3: numL3,
+                    iNeutral,
+                  })
+                )
+              }
+              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-sm shadow-amber-500/20 w-fit shrink-0"
+              title="Skapa en professionell A4 PDF-rapport med källor och teknisk beskrivning"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Spara som PDF-rapport (A4)</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -636,6 +730,16 @@ export const ThreePhaseCalculator: React.FC = () => {
                 <span className="text-xs font-mono text-slate-400">A</span>
               </div>
             </div>
+          </div>
+
+          {/* Phasor Vector Diagram (Visardiagram) */}
+          <div className="pt-1">
+            <PhasorDiagram
+              iL1={numL1}
+              iL2={numL2}
+              iL3={numL3}
+              iNeutral={iNeutral}
+            />
           </div>
 
           {/* Neutral Result */}
@@ -745,22 +849,14 @@ export const ThreePhaseCalculator: React.FC = () => {
       )}
 
       {/* PDF Report Modal */}
-      {showPdfModal && (
+      {activeReportData && (
         <CalculationPdfReportModal
-          isOpen={showPdfModal}
-          onClose={() => setShowPdfModal(false)}
-          reportData={createThreePhaseReportData({
-            solveFor,
-            voltage: U,
-            current: calcCurrent,
-            activePowerW: calcP,
-            apparentPowerVA: calcS,
-            reactivePowerVAr: calcQ,
-            cosPhi: pf,
-            efficiency: eta,
-          })}
+          isOpen={activeReportData !== null}
+          onClose={() => setActiveReportData(null)}
+          reportData={activeReportData}
         />
       )}
     </div>
   );
 };
+

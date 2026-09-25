@@ -4,6 +4,7 @@ import { Cable, AlertTriangle, CheckCircle2, ShieldAlert, FileText } from 'lucid
 import { FormulaTheoryCard, FormulaVariable } from '../FormulaTheoryCard';
 import { CalculationPdfReportModal } from '../Report/CalculationPdfReportModal';
 import { createVoltageDropReportData } from '../../utils/reportHelpers';
+import { VoltageDropDiagram } from './VoltageDropDiagram';
 
 export const VoltageDropCalculator: React.FC = () => {
   const [phaseType, setPhaseType] = useState<'1-phase' | '3-phase'>('1-phase');
@@ -286,6 +287,25 @@ export const VoltageDropCalculator: React.FC = () => {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Modern Visual Circuit Diagram & Tolerance Meter */}
+          <div className="pt-2">
+            <VoltageDropDiagram
+              voltage={U}
+              endVoltage={endVoltage}
+              current={I}
+              length={L}
+              area={A}
+              material={material}
+              deltaU={deltaU}
+              dropPercent={dropPercent}
+              maxDropPct={maxLimit}
+              isWithinLimit={isWithinLimit}
+              phaseType={phaseType}
+              rCable={rSingle * (phaseType === '1-phase' ? 2 : 1)}
+              powerLoss={powerLoss}
+            />
           </div>
         </div>
 
